@@ -7,13 +7,13 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install the Python dependencies
+# Install the Python dependencies from the official server
 RUN pip install -r requirements.txt
 
 # Copy the rest of your application code (app.py, prompt.txt, etc.)
 COPY . .
 
-# Tell the container to listen on port 10000
+# Tell the container to listen on port 10000 (Render's standard)
 EXPOSE 10000
 
 # The command to run your application using gunicorn

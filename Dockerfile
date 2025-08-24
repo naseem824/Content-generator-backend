@@ -7,10 +7,11 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Upgrade pip and install the Python dependencies, explicitly trusting the hosts
-# This is the line that fixes the network issue.
+# Upgrade pip and install dependencies with VERBOSE logging
+# This will give us maximum detail on the error.
 RUN pip install --upgrade pip && \
     pip install \
+    --verbose \
     --trusted-host pypi.org \
     --trusted-host files.pythonhosted.org \
     -r requirements.txt

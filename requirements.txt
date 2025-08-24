@@ -2,3 +2,4 @@ Flask
 google-generative-ai
 gunicorn
 Markdown
+python-dotenv

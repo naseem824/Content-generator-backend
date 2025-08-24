@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: seo-generator
+    env: python
+    pythonVersion: "3.11.9"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false # Tells Render to use the value from the dashboard

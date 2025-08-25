@@ -1,24 +1,20 @@
 import os
 import google.generativeai as genai
-from flask import Flask, render_template, request, Markup
+from flask import Flask, render_template, request
+from markupsafe import Markup
 import markdown
 
 # This sets up your web application
 app = Flask(__name__)
 
 # --- Secure API Key Configuration ---
-# This block correctly and securely gets the API key from Render's environment variables.
 try:
-    # This is the corrected line. It looks for the variable named "GEMINI_API_KEY".
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     
-    # Check if the key was actually found
     if not gemini_api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found. Please set it in Render.")
+        raise ValueError("GEMINI_API_KEY environment variable not found. Please set it in Railway or your environment.")
 
     genai.configure(api_key=gemini_api_key)
-    
-    # We select the powerful 1.5 Pro model
     model = genai.GenerativeModel('gemini-1.5-pro-latest')
 
 except Exception as e:
@@ -27,7 +23,7 @@ except Exception as e:
 
 # --- Helper Function ---
 def load_core_instructions():
-    """This function opens and reads your 'prompt.txt' file."""
+    """Reads the 'prompt.txt' file."""
     try:
         with open('prompt.txt', 'r', encoding='utf-8') as file:
             return file.read()
@@ -36,7 +32,6 @@ def load_core_instructions():
         return "ERROR: Core instructions file (prompt.txt) is missing."
 
 # --- Web Page Routes ---
-
 @app.route('/')
 def index():
     """Renders the main page with the input form."""
@@ -64,3 +59,5 @@ def generate():
         print(f"🔴 API ERROR: {e}")
         return render_template('result.html', generated_content=error_message)
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

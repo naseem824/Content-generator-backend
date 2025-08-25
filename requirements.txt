@@ -1,6 +1,6 @@
 --index-url https://pypi.org/simple
 Flask
-google-generative-ai==0.5.4
+google-generativeai==0.8.4
 gunicorn
 Markdown
 python-dotenv

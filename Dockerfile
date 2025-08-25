@@ -23,4 +23,6 @@ COPY . .
 EXPOSE 10000
 
 # The command to run your application
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
+CMD ["gunicorn", "--workers", "4", "--timeout", "120", "app:app"]
+
+

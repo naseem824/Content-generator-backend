@@ -53,63 +53,49 @@ def generate():
         if brand_voice_file and brand_voice_file.filename != '':
             brand_voice_data = brand_voice_file.read().decode('utf-8')
 
-        # --- Main Logic: Two-Step Prompting ---
+        # --- Main Logic: Two-Step Prompting with Universal Step 1 ---
+        
+        # Load the single, universal strategist prompt for both personas
+        prompt_step1_template = load_prompt_template('prompt_strategist_step1.txt')
+        
+        # --- Step 1: Generate the Strategic Brief (logic varies slightly per persona) ---
         if persona == 'article':
-            # --- Step 1: Generate the Strategic Brief ---
             print("INFO: Starting Article Generation - Step 1: Creating Brief")
-            prompt_step1_template = load_prompt_template('prompt_article_step1.txt')
             competitor_word_count = len(competitor_data.split())
             target_word_count = max(int(competitor_word_count * 1.25), 1500)
-            
-            prompt_step1 = prompt_step1_template.format(
-                brand_voice_data=brand_voice_data,
-                target_word_count=target_word_count,
-                competitor_data=competitor_data
-            )
-            
-            brief_response = model.generate_content(prompt_step1)
-            strategic_brief = brief_response.text
-            
-            # --- Step 2: Generate the Final Article using the Brief ---
+        else: # This covers 'copywriter'
+            print("INFO: Starting Copywriter Generation - Step 1: Creating Brief")
+            # For copywriter, word count is not a primary goal, so we pass a default value
+            target_word_count = 0 
+
+        prompt_step1 = prompt_step1_template.format(
+            brand_voice_data=brand_voice_data,
+            target_word_count=target_word_count,
+            competitor_data=competitor_data
+        )
+        
+        brief_response = model.generate_content(prompt_step1)
+        strategic_brief = brief_response.text
+        
+        # --- Step 2: Generate the Final Content using the Brief ---
+        if persona == 'article':
             print("INFO: Starting Article Generation - Step 2: Writing Content")
             prompt_step2_template = load_prompt_template('prompt_article_step2.txt')
-            
             final_prompt = prompt_step2_template.format(
                 brand_voice_data=brand_voice_data,
                 strategic_brief=strategic_brief,
                 target_word_count=target_word_count
             )
-            
-            final_response = model.generate_content(final_prompt)
-            final_output = final_response.text
-
-        elif persona == 'copywriter':
-            # --- Step 1: Generate the Conversion Brief ---
-            print("INFO: Starting Copywriter Generation - Step 1: Creating Brief")
-            prompt_step1_template = load_prompt_template('prompt_copywriter_step1.txt')
-
-            prompt_step1 = prompt_step1_template.format(
-                brand_voice_data=brand_voice_data,
-                competitor_data=competitor_data
-            )
-
-            brief_response = model.generate_content(prompt_step1)
-            strategic_brief = brief_response.text
-
-            # --- Step 2: Generate the Final Copy using the Brief ---
+        else: # This covers 'copywriter'
             print("INFO: Starting Copywriter Generation - Step 2: Writing Content")
             prompt_step2_template = load_prompt_template('prompt_copywriter_step2.txt')
-            
             final_prompt = prompt_step2_template.format(
                 brand_voice_data=brand_voice_data,
                 strategic_brief=strategic_brief
             )
-            
-            final_response = model.generate_content(final_prompt)
-            final_output = final_response.text
-            
-        else:
-            return render_template('result.html', generated_content="Invalid persona selected.")
+        
+        final_response = model.generate_content(final_prompt)
+        final_output = final_response.text
 
         # --- Convert final markdown output to HTML and render ---
         html_content = Markup(markdown.markdown(final_output, extensions=['fenced_code', 'tables']))

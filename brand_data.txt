@@ -1,0 +1,46 @@
+📌 Brand Data & Voice File (Short Form)
+1️⃣ Business Owners (General)
+
+Business Name: [Insert]
+
+Website URL: [Insert]
+
+Tagline: [Insert]
+
+About (1–2 lines): [Company’s core purpose in simple words]
+
+Target Audience: [Who they serve]
+
+Tone & Voice: Professional, Clear, Trustworthy
+
+2️⃣ Service-Based Businesses
+
+Website URL: [Insert]
+
+Services Offered: [List key services briefly]
+
+Service Areas: [City / Country / Online]
+
+USP (Unique Selling Point): [E.g., Fast response, affordable, expert team]
+
+Key Messages: Reliable, Results-driven, Customer-focused
+
+3️⃣ Product/E-commerce Owners
+
+Website URL: [Insert]
+
+Products Offered: [Main product categories]
+
+Platform/Store: [Shopify, WooCommerce, Custom site]
+
+USP: [E.g., Affordable prices, premium quality, fast shipping]
+
+Key Messages: Secure shopping, Easy returns, Great customer service
+
+👉 Usage Notes:
+
+Use Part 1 only for general businesses.
+
+Use Part 1 + 2 for service providers.
+
+Use Part 1 + 3 for product/e-commerce brands.

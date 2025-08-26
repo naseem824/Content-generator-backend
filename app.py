@@ -46,30 +46,31 @@ def generate():
         # --- Get all data from the form ---
         persona = request.form.get('persona', 'article')
         competitor_data = request.form.get('competitor_data', '').strip()
-        brand_voice_file = request.files.get('brand_voice_file')
+        # Corrected variable name for the brand data file
+        brand_data_file = request.files.get('brand_data_file') 
 
-        # --- Read the optional brand voice file ---
-        brand_voice_data = "No specific brand voice instructions provided."
-        if brand_voice_file and brand_voice_file.filename != '':
-            brand_voice_data = brand_voice_file.read().decode('utf-8')
+        # --- Read the optional brand data file ---
+        # Corrected variable name
+        brand_data = "No specific brand data or voice instructions provided."
+        if brand_data_file and brand_data_file.filename != '':
+            brand_data = brand_data_file.read().decode('utf-8')
 
         # --- Main Logic: Two-Step Prompting with Universal Step 1 ---
         
         # Load the single, universal strategist prompt for both personas
         prompt_step1_template = load_prompt_template('prompt_strategist_step1.txt')
         
-        # --- Step 1: Generate the Strategic Brief (logic varies slightly per persona) ---
+        # --- Step 1: Generate the Strategic Brief ---
         if persona == 'article':
             print("INFO: Starting Article Generation - Step 1: Creating Brief")
             competitor_word_count = len(competitor_data.split())
             target_word_count = max(int(competitor_word_count * 1.25), 1500)
         else: # This covers 'copywriter'
             print("INFO: Starting Copywriter Generation - Step 1: Creating Brief")
-            # For copywriter, word count is not a primary goal, so we pass a default value
             target_word_count = 0 
 
         prompt_step1 = prompt_step1_template.format(
-            brand_voice_data=brand_voice_data,
+            brand_data=brand_data, # Corrected variable
             target_word_count=target_word_count,
             competitor_data=competitor_data
         )
@@ -82,7 +83,7 @@ def generate():
             print("INFO: Starting Article Generation - Step 2: Writing Content")
             prompt_step2_template = load_prompt_template('prompt_article_step2.txt')
             final_prompt = prompt_step2_template.format(
-                brand_voice_data=brand_voice_data,
+                brand_data=brand_data, # Corrected variable
                 strategic_brief=strategic_brief,
                 target_word_count=target_word_count
             )
@@ -90,7 +91,7 @@ def generate():
             print("INFO: Starting Copywriter Generation - Step 2: Writing Content")
             prompt_step2_template = load_prompt_template('prompt_copywriter_step2.txt')
             final_prompt = prompt_step2_template.format(
-                brand_voice_data=brand_voice_data,
+                brand_data=brand_data, # Corrected variable
                 strategic_brief=strategic_brief
             )
         

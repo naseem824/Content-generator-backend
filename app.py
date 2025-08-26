@@ -4,60 +4,84 @@ from flask import Flask, render_template, request
 from markupsafe import Markup
 import markdown
 
-# This sets up your web application
 app = Flask(__name__)
 
-# --- Secure API Key Configuration ---
+# --- Secure API Key and Model Configuration ---
 try:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
-    
     if not gemini_api_key:
-        raise ValueError("GEMINI_API_KEY environment variable not found. Please set it in Railway or your environment.")
+        raise ValueError("GEMINI_API_KEY environment variable not found.")
 
     genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel('gemini-1.5-pro-latest')
-
+    
+    generation_config = genai.GenerationConfig(temperature=0.4)
+    model = genai.GenerativeModel(
+        'gemini-1.5-pro-latest',
+        generation_config=generation_config
+    )
 except Exception as e:
     print(f"🔴 FATAL ERROR: Could not configure Gemini API. Error: {e}")
     model = None
 
-# --- Helper Function ---
-def load_core_instructions():
-    """Reads the 'prompt.txt' file."""
+# --- Helper function to load a prompt file ---
+def load_prompt_template(filename):
     try:
-        with open('prompt.txt', 'r', encoding='utf-8') as file:
+        with open(filename, 'r', encoding='utf-8') as file:
             return file.read()
     except FileNotFoundError:
-        print("🔴 ERROR: prompt.txt file not found!")
-        return "ERROR: Core instructions file (prompt.txt) is missing."
+        print(f"🔴 ERROR: Prompt file '{filename}' not found!")
+        return f"ERROR: Core instructions file '{filename}' is missing."
 
 # --- Web Page Routes ---
 @app.route('/')
 def index():
-    """Renders the main page with the input form."""
     return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    """Handles the form submission and generates the content."""
-    
     if not model:
-        error_message = "The Gemini API is not configured. Check the server logs and your API key."
-        return render_template('result.html', generated_content=error_message)
+        return render_template('result.html', generated_content="The Gemini API is not configured.")
 
-    competitor_data = request.form.get('competitor_data', '').strip()
-    core_instructions = load_core_instructions()
-    final_prompt = f"{core_instructions}\n\n# User-Provided Raw Competitor Data\n\n---\n\n{competitor_data}"
-    
     try:
+        # --- Get all data from the new form ---
+        persona = request.form.get('persona', 'article') # Default to article writer
+        competitor_data = request.form.get('competitor_data', '').strip()
+        brand_voice_file = request.files.get('brand_voice_file')
+
+        # --- Read the optional brand voice file ---
+        brand_voice_data = "No specific brand voice instructions provided."
+        if brand_voice_file and brand_voice_file.filename != '':
+            brand_voice_data = brand_voice_file.read().decode('utf-8')
+
+        # --- Select the correct prompt and build the final prompt ---
+        if persona == 'article':
+            prompt_template = load_prompt_template('prompt_article.txt')
+            competitor_word_count = len(competitor_data.split())
+            target_word_count = max(int(competitor_word_count * 1.25), 1500)
+            final_prompt = prompt_template.format(
+                target_word_count=target_word_count,
+                brand_voice_data=brand_voice_data,
+                competitor_data=competitor_data
+            )
+        elif persona == 'copywriter':
+            prompt_template = load_prompt_template('prompt_copywriter.txt')
+            final_prompt = prompt_template.format(
+                brand_voice_data=brand_voice_data,
+                competitor_data=competitor_data
+            )
+        else:
+            return render_template('result.html', generated_content="Invalid persona selected.")
+
+        # --- Generate content ---
         response = model.generate_content(final_prompt)
         html_content = Markup(markdown.markdown(response.text, extensions=['fenced_code', 'tables']))
         return render_template('result.html', generated_content=html_content)
 
     except Exception as e:
-        error_message = f"An error occurred while communicating with the Gemini API: {e}"
+        error_message = f"An error occurred: {e}"
         print(f"🔴 API ERROR: {e}")
         return render_template('result.html', generated_content=error_message)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)

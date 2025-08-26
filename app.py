@@ -7,40 +7,9 @@ from flask import Flask, render_template, request
 # Import Vertex AI libraries
 import vertexai
 from vertexai.generative_models import GenerativeModel, Tool
-# This old import is no longer needed and has been removed:
-# from vertexai.preview.grounding import GoogleSearchRetrieval 
 from google.oauth2 import service_account
 
 app = Flask(__name__)
-
-# --- Vertex AI and Model Configuration ---
-try:
-    # Get Project ID and Service Account JSON from environment variables
-    PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-    GCP_JSON_CREDENTIALS = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
-
-    if not PROJECT_ID or not GCP_JSON_CREDENTIALS:
-        raise ValueError("GCP_PROJECT_ID and GCP_SERVICE_ACCOUNT_JSON environment variables are required.")
-
-    # Load credentials from the JSON string
-    credentials_info = json.loads(GCP_JSON_CREDENTIALS)
-    credentials = service_account.Credentials.from_service_account_info(credentials_info)
-
-    # Initialize Vertex AI
-    vertexai.init(project=PROJECT_ID, location="us-central1", credentials=credentials)
-
-    # CORRECTED: The new, simpler way to enable the Google Search tool
-    tool = Tool.from_google_search_retrieval()
-    
-    model = GenerativeModel(
-        "gemini-1.5-pro-001", # Using a specific stable version for consistency
-        tools=[tool]
-    )
-    print("✅ Vertex AI and Gemini Model configured successfully with Google Search tool.")
-
-except Exception as e:
-    print(f"🔴 FATAL ERROR: Could not configure Vertex AI. Error: {e}")
-    model = None
 
 # --- Helper function to load a prompt file (no changes needed) ---
 def load_prompt_template(filename):
@@ -58,12 +27,36 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    if not model:
-        return render_template('result.html', generated_content="The Vertex AI model is not configured.")
-
+    # --- LAZY INITIALIZATION: Configure the model INSIDE the request ---
+    model = None # Start with model as None
     try:
-        # The two-step logic remains exactly the same.
+        PROJECT_ID = os.getenv("GCP_PROJECT_ID")
+        GCP_JSON_CREDENTIALS = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+
+        if not PROJECT_ID or not GCP_JSON_CREDENTIALS:
+            raise ValueError("GCP_PROJECT_ID and GCP_SERVICE_ACCOUNT_JSON environment variables are required.")
+
+        credentials_info = json.loads(GCP_JSON_CREDENTIALS)
+        credentials = service_account.Credentials.from_service_account_info(credentials_info)
         
+        # Initialize Vertex AI for this request
+        vertexai.init(project=PROJECT_ID, location="us-central1", credentials=credentials)
+
+        tool = Tool.from_google_search_retrieval()
+        
+        model = GenerativeModel(
+            "gemini-1.5-pro-001",
+            tools=[tool]
+        )
+        print("✅ Vertex AI and Gemini Model configured successfully for this request.")
+
+    except Exception as e:
+        print(f"🔴 FATAL ERROR on request: Could not configure Vertex AI. Error: {e}")
+        # If initialization fails, show the error on the page
+        return render_template('result.html', generated_content=f"Error configuring Vertex AI: {e}")
+
+    # --- From here, the two-step logic remains the same ---
+    try:
         persona = request.form.get('persona', 'article')
         competitor_data = request.form.get('competitor_data', '').strip()
         brand_data_file = request.files.get('brand_data_file')
@@ -111,7 +104,7 @@ def generate():
         return render_template('result.html', generated_content=html_content)
 
     except Exception as e:
-        error_message = f"An error occurred: {e}"
+        error_message = f"An error occurred during generation: {e}"
         print(f"🔴 API ERROR: {e}")
         return render_template('result.html', generated_content=error_message)
 

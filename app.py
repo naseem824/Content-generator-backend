@@ -6,9 +6,8 @@ from flask import Flask, render_template, request
 
 # Import Vertex AI libraries
 import vertexai
-from vertexai.generative_models import GenerativeModel, Tool
-# CORRECTED IMPORT for the search tool
-from vertexai.preview.generative_models import GoogleSearchRetrieval 
+from vertexai.generative_models import GenerativeModel 
+# We have removed the 'Tool' and 'GoogleSearchRetrieval' imports
 from google.oauth2 import service_account
 
 app = Flask(__name__)
@@ -27,15 +26,10 @@ try:
     
     vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 
-    # CORRECTED: The new, correct way to enable the Google Search tool
-    google_search_retrieval = GoogleSearchRetrieval()
-    tool = Tool.from_google_search_retrieval(google_search_retrieval)
+    # We initialize the model WITHOUT any specific tools
+    model = GenerativeModel("gemini-1.5-pro-001")
     
-    model = GenerativeModel(
-        "gemini-1.5-pro-001",
-        tools=[tool]
-    )
-    print("✅ Vertex AI and Gemini Model configured successfully with Google Search tool.")
+    print("✅ Vertex AI and Gemini Model configured successfully.")
 
 except Exception as e:
     print(f"🔴 FATAL ERROR: Could not configure Vertex AI. Error: {e}")
@@ -57,28 +51,8 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    # Lazy initialization logic is no longer needed with this fix, but keeping for robustness
-    # The global model should work now.
     if not model:
-        # Fallback to initialize here if global initialization failed
-        try:
-            # Re-initialize for this request
-            PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-            GCP_JSON_CREDENTIALS = os.getenv("GCP_SERVICE_ACCOUNT_JSON")
-            credentials_info = json.loads(GCP_JSON_CREDENTIALS)
-            credentials = service_account.Credentials.from_service_account_info(credentials_info)
-            vertexai.init(project=PROJECT_ID, location="us-central1", credentials=credentials)
-            google_search_retrieval = GoogleSearchRetrieval()
-            tool = Tool.from_google_search_retrieval(google_search_retrieval)
-            temp_model = GenerativeModel("gemini-1.5-pro-001", tools=[tool])
-            print("✅ Re-initialized model successfully for this request.")
-            # Use this temporary model for the current request
-            current_model = temp_model
-        except Exception as e:
-             print(f"🔴 FATAL ERROR on request: Could not configure Vertex AI. Error: {e}")
-             return render_template('result.html', generated_content=f"Error configuring Vertex AI: {e}")
-    else:
-        current_model = model
+        return render_template('result.html', generated_content="The Vertex AI model is not configured.")
 
     try:
         # The two-step logic remains the same.
@@ -105,7 +79,7 @@ def generate():
         )
         
         print("INFO: Sending Step 1 prompt to Vertex AI...")
-        brief_response = current_model.generate_content(prompt_step1)
+        brief_response = model.generate_content(prompt_step1)
         strategic_brief = brief_response.text
         
         print("INFO: Sending Step 2 prompt to Vertex AI...")
@@ -123,7 +97,7 @@ def generate():
                 strategic_brief=strategic_brief
             )
         
-        final_response = current_model.generate_content(final_prompt)
+        final_response = model.generate_content(final_prompt)
         final_output = final_response.text
 
         html_content = Markup(markdown.markdown(final_output, extensions=['fenced_code', 'tables']))

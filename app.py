@@ -43,8 +43,8 @@ def generate():
         return render_template('result.html', generated_content="The Gemini API is not configured.")
 
     try:
-        # --- Get all data from the new form ---
-        persona = request.form.get('persona', 'article') # Default to article writer
+        # --- Get all data from the form ---
+        persona = request.form.get('persona', 'article')
         competitor_data = request.form.get('competitor_data', '').strip()
         brand_voice_file = request.files.get('brand_voice_file')
 
@@ -53,28 +53,66 @@ def generate():
         if brand_voice_file and brand_voice_file.filename != '':
             brand_voice_data = brand_voice_file.read().decode('utf-8')
 
-        # --- Select the correct prompt and build the final prompt ---
+        # --- Main Logic: Two-Step Prompting ---
         if persona == 'article':
-            prompt_template = load_prompt_template('prompt_article.txt')
+            # --- Step 1: Generate the Strategic Brief ---
+            print("INFO: Starting Article Generation - Step 1: Creating Brief")
+            prompt_step1_template = load_prompt_template('prompt_article_step1.txt')
             competitor_word_count = len(competitor_data.split())
             target_word_count = max(int(competitor_word_count * 1.25), 1500)
-            final_prompt = prompt_template.format(
+            
+            prompt_step1 = prompt_step1_template.format(
+                brand_voice_data=brand_voice_data,
                 target_word_count=target_word_count,
-                brand_voice_data=brand_voice_data,
                 competitor_data=competitor_data
             )
+            
+            brief_response = model.generate_content(prompt_step1)
+            strategic_brief = brief_response.text
+            
+            # --- Step 2: Generate the Final Article using the Brief ---
+            print("INFO: Starting Article Generation - Step 2: Writing Content")
+            prompt_step2_template = load_prompt_template('prompt_article_step2.txt')
+            
+            final_prompt = prompt_step2_template.format(
+                brand_voice_data=brand_voice_data,
+                strategic_brief=strategic_brief,
+                target_word_count=target_word_count
+            )
+            
+            final_response = model.generate_content(final_prompt)
+            final_output = final_response.text
+
         elif persona == 'copywriter':
-            prompt_template = load_prompt_template('prompt_copywriter.txt')
-            final_prompt = prompt_template.format(
+            # --- Step 1: Generate the Conversion Brief ---
+            print("INFO: Starting Copywriter Generation - Step 1: Creating Brief")
+            prompt_step1_template = load_prompt_template('prompt_copywriter_step1.txt')
+
+            prompt_step1 = prompt_step1_template.format(
                 brand_voice_data=brand_voice_data,
                 competitor_data=competitor_data
             )
+
+            brief_response = model.generate_content(prompt_step1)
+            strategic_brief = brief_response.text
+
+            # --- Step 2: Generate the Final Copy using the Brief ---
+            print("INFO: Starting Copywriter Generation - Step 2: Writing Content")
+            prompt_step2_template = load_prompt_template('prompt_copywriter_step2.txt')
+            
+            final_prompt = prompt_step2_template.format(
+                brand_voice_data=brand_voice_data,
+                strategic_brief=strategic_brief
+            )
+            
+            final_response = model.generate_content(final_prompt)
+            final_output = final_response.text
+            
         else:
             return render_template('result.html', generated_content="Invalid persona selected.")
 
-        # --- Generate content ---
-        response = model.generate_content(final_prompt)
-        html_content = Markup(markdown.markdown(response.text, extensions=['fenced_code', 'tables']))
+        # --- Convert final markdown output to HTML and render ---
+        html_content = Markup(markdown.markdown(final_output, extensions=['fenced_code', 'tables']))
         return render_template('result.html', generated_content=html_content)
 
     except Exception as e:

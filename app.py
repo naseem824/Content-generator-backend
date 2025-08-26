@@ -7,7 +7,8 @@ from flask import Flask, render_template, request
 # Import Vertex AI libraries
 import vertexai
 from vertexai.generative_models import GenerativeModel, Tool
-from vertexai.preview.grounding import GoogleSearchRetrieval
+# This old import is no longer needed and has been removed:
+# from vertexai.preview.grounding import GoogleSearchRetrieval 
 from google.oauth2 import service_account
 
 app = Flask(__name__)
@@ -28,8 +29,8 @@ try:
     # Initialize Vertex AI
     vertexai.init(project=PROJECT_ID, location="us-central1", credentials=credentials)
 
-    # Configure the model with the Google Search tool for reliable research
-    tool = Tool.from_google_search_retrieval(GoogleSearchRetrieval())
+    # CORRECTED: The new, simpler way to enable the Google Search tool
+    tool = Tool.from_google_search_retrieval()
     
     model = GenerativeModel(
         "gemini-1.5-pro-001", # Using a specific stable version for consistency
@@ -61,9 +62,7 @@ def generate():
         return render_template('result.html', generated_content="The Vertex AI model is not configured.")
 
     try:
-        # The two-step logic remains exactly the same as before.
-        # The only difference is that now the `model.generate_content()` call
-        # will reliably use Google Search when the prompt asks for research.
+        # The two-step logic remains exactly the same.
         
         persona = request.form.get('persona', 'article')
         competitor_data = request.form.get('competitor_data', '').strip()

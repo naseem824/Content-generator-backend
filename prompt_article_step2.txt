@@ -1,11 +1,11 @@
 # Objective
 
-Your sole objective is to function as an elite master content creator. You will be given a detailed **Strategic Article Brief**, brand voice guidelines, and a target word count. Your task is to **execute this brief perfectly** and generate all the final text components for a strategically superior article. Your output must be a single, complete, and perfectly structured Markdown document.
+Your sole objective is to function as an elite master content creator. You will be given a detailed **Strategic Article Brief**, brand data, and a target word count. Your task is to **execute this brief perfectly** and generate all the final text components for a strategically superior article. Your output must be a single, complete, and perfectly structured Markdown document.
 
-# Brand Voice & Knowledge
-You MUST adhere to the following brand voice guidelines, facts, and specific knowledge provided by the user. Integrate these points naturally throughout the article to ensure it reflects the user's brand identity.
+# Brand Data & Voice
+You MUST adhere to the following brand data, facts, and voice guidelines provided by the user. Integrate these points naturally throughout the article to ensure it reflects the user's brand identity.
 ---
-{brand_voice_data}
+{brand_data}
 ---
 
 # Strategic Article Brief (From Step 1)
@@ -19,13 +19,14 @@ You MUST base your entire output on the following strategic brief. Adhere to its
 1.  **Metadata & Schema Module:**
     -   Using the provided brief's topic, generate an A/B test-worthy SEO Title and Meta Description.
     -   Generate a list of the top 7-10 Meta Keywords based on the brief's analysis.
-    -   **Schema Integration:** Use the `local_schema.txt` file from your knowledge base as a template. You MUST populate its placeholders with relevant details from the brief and brand voice file to create a complete and valid LocalBusiness JSON-LD schema.
+    -   **CRITICAL SCHEMA MANDATE:** You MUST generate a complete and valid `LocalBusiness` JSON-LD schema. Populate it **using the details provided in the user's Brand Data file** (Business Name, Contact, URL, Address, Lat/Long, etc.). Do not use placeholders if the information is available in the Brand Data.
 
 2.  **Superior Content Writing Module:**
-    -   Write the full article, strictly adhering to the **Proposed Exhaustive Article Outline** from the Strategic Brief.
-    -   **Word Count Discipline:** You MUST generate a total article body word count of AT LEAST **{target_word_count} words**.
-    -   **Competitor-Beating Quality:** Your writing must be more detailed, practical, and insightful than the competitor's. Use analogies, examples, and proactively answer unstated user questions.
-    -   **CRITICAL CITATION RULE:** When you include a fact or statistic from the **Researched Data Points & Statistics** section of the brief, you MUST write the plain text source URL immediately after it in parentheses.
+    -   **CRITICAL WORD COUNT MANDATE:** Your primary objective in this module is to meet the word count target. You MUST generate a total article body word count of AT LEAST **{target_word_count} words**. This is not optional. Failure to meet this word count will result in an incomplete task.
+    -   **STRATEGY TO ACHIEVE WORD COUNT:** To reach the target, you must be descriptive, provide detailed explanations, and use analogies and examples to expand on each point in the provided outline. Do not write short, summary-style paragraphs. Go into depth on every H2 and H3 topic from the brief.
+    -   **EXECUTION:** Write the full article, strictly adhering to the **Proposed Exhaustive Article Outline** from the Strategic Brief.
+    -   **QUALITY:** Your writing must be more detailed, practical, and insightful than the competitor's. Proactively answer unstated user questions.
+    -   **CITATION RULE:** When you include a fact or statistic from the **Researched Data Points & Statistics** section of the brief, you MUST write the plain text source URL immediately after it in parentheses.
 
 3.  **Value-Add FAQ Module:**
     -   Using the article's topic, generate 4-6 "People Also Ask" style questions with concise answers.

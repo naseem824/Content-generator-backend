@@ -7,22 +7,16 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Upgrade pip and install dependencies with VERBOSE logging
-# This will give us maximum detail on the error.
+# Upgrade pip and install dependencies
 RUN pip install --upgrade pip && \
-    pip install \
-    --verbose \
-    --trusted-host pypi.org \
-    --trusted-host files.pythonhosted.org \
-    -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application code
 COPY . .
 
-# Tell the container to listen on port 10000
-EXPOSE 10000
+# The PORT environment variable will be provided by the hosting platform (e.g., Railway/Render)
+# The EXPOSE instruction is good practice but not strictly required by Railway/Render
+# EXPOSE $PORT
 
-# The command to run your application
-CMD ["gunicorn", "--workers", "4", "--timeout", "120", "app:app"]
-
-
+# The command to run your application, now correctly binding to the PORT variable
+CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "--workers", "4", "--timeout", "180", "app:app"]

@@ -7,7 +7,6 @@ from flask import Flask, render_template, request
 # Import Vertex AI libraries
 import vertexai
 from vertexai.generative_models import GenerativeModel
-# We have removed ALL 'Tool' and 'GoogleSearchRetrieval' imports
 from google.oauth2 import service_account
 
 app = Flask(__name__)
@@ -26,8 +25,9 @@ try:
     
     vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 
-    # We initialize the model WITHOUT any specific tools. It's simpler and more stable.
-    model = GenerativeModel("gemini-1.5-pro-latest")
+    # --- YAHAN AAKHRI TABDEELI KI GAYI HAI ---
+    # Using the universally available gemini-1.0-pro model to ensure access
+    model = GenerativeModel("gemini-1.0-pro")
     
     print("✅ Vertex AI and Gemini Model configured successfully.")
 

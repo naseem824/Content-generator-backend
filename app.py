@@ -6,9 +6,8 @@ from flask import Flask, render_template, request
 
 # Import Vertex AI libraries
 import vertexai
-from vertexai.generative_models import GenerativeModel, Tool
-# CORRECTED IMPORT for the search tool
-from vertexai.preview.generative_models import GoogleSearchRetrieval 
+from vertexai.generative_models import GenerativeModel
+# We have removed ALL 'Tool' and 'GoogleSearchRetrieval' imports
 from google.oauth2 import service_account
 
 app = Flask(__name__)
@@ -27,15 +26,10 @@ try:
     
     vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 
-    # CORRECTED: The final, correct way to enable the Google Search tool
-    google_search_retrieval = GoogleSearchRetrieval()
-    tool = Tool.from_google_search_retrieval(google_search_retrieval)
+    # We initialize the model WITHOUT any specific tools. It's simpler and more stable.
+    model = GenerativeModel("gemini-1.5-pro-latest")
     
-    model = GenerativeModel(
-        "gemini-1.5-pro-latest", # Switched to -latest for broader availability
-        tools=[tool]
-    )
-    print("✅ Vertex AI and Gemini Model configured successfully with Google Search tool.")
+    print("✅ Vertex AI and Gemini Model configured successfully.")
 
 except Exception as e:
     print(f"🔴 FATAL ERROR: Could not configure Vertex AI. Error: {e}")
@@ -57,7 +51,6 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    # Using the globally initialized model
     if not model:
         return render_template('result.html', generated_content="The Vertex AI model is not configured. Check the deploy logs for a FATAL ERROR.")
 

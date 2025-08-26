@@ -32,7 +32,7 @@ try:
     tool = Tool.from_google_search_retrieval(google_search_retrieval)
     
     model = GenerativeModel(
-        "gemini-1.5-pro-latest", # Switched back to -latest for broader availability
+        "gemini-1.5-pro-latest", # Switched to -latest for broader availability
         tools=[tool]
     )
     print("✅ Vertex AI and Gemini Model configured successfully with Google Search tool.")

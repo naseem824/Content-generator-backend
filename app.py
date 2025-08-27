@@ -25,8 +25,8 @@ try:
     
     vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 
-    # --- FINAL CHANGE: Using the most universally available model name ---
-    model = GenerativeModel("gemini-pro")
+    # --- FINAL CHANGE: Using the universally available gemini-1.0-pro model ---
+    model = GenerativeModel("gemini-1.0-pro")
     
     print("✅ Vertex AI and Gemini Model configured successfully.")
 
